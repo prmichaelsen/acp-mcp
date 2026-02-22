@@ -1,7 +1,69 @@
-# ACP Package Manifest
-# Tracks installed packages and their versions
-
 packages:
+  mcp-server-starter:
+    source: https://github.com/prmichaelsen/acp-mcp-server-starter.git
+    package_version: 1.2.0
+    commit: 77536c0ab3b552335af7283b1b18a0d6ab7144d3
+    installed_at: 2026-02-22T23:01:48Z
+    updated_at: 2026-02-22T23:01:48Z
+    files:
+      patterns:
+        - name: mcp-server-starter.tool-creation.md
+          version: 0.0.0
+          installed_at: 2026-02-22T23:01:48Z
+          modified: false
+          checksum: sha256:5ea55b3b31c46cdcf0858dcf7f49e66661a47fb7c1ca5b3b611afd281e3af62a
+        - name: mcp-server-starter.test-config.md
+          version: 0.0.0
+          installed_at: 2026-02-22T23:01:52Z
+          modified: false
+          checksum: sha256:c363ad235c62f769637b36bf16811ebb9c62692d099f398ef4e549d277a731a3
+        - name: mcp-server-starter.server-standalone.md
+          version: 0.0.0
+          installed_at: 2026-02-22T23:01:58Z
+          modified: false
+          checksum: sha256:c620b0c2be104407fee88275d5e41cf2bdb64c93903edcf49e288fe93ea36086
+        - name: mcp-server-starter.server-factory.md
+          version: 0.0.0
+          installed_at: 2026-02-22T23:02:04Z
+          modified: false
+          checksum: sha256:b37abb3d46dd39b9f35c9273fba9cbcc2ff17901d97735d35fe0ca04d189b1fa
+        - name: mcp-server-starter.config-management.md
+          version: 0.0.0
+          installed_at: 2026-02-22T23:02:10Z
+          modified: false
+          checksum: sha256:fec021a9d951836769442ffcbe74451345710fd89c075e914dc73b66dc61cbbf
+        - name: mcp-server-starter.build-config.md
+          version: 0.0.0
+          installed_at: 2026-02-22T23:02:17Z
+          modified: false
+          checksum: sha256:f98f3ffb88063689cf959e1647ea3eb2eeba9ab0f2da8eb77ff0c94e071e1e89
+        - name: mcp-server-starter.bootstrap.md
+          version: 0.0.0
+          installed_at: 2026-02-22T23:02:24Z
+          modified: false
+          checksum: sha256:419957c5e0f493f4c8d0f5c13bb78b56ecaf9299dd5a296c5ab2ac581a3295ef
+      commands:
+        - name: mcp-server-starter.init.md
+          version: 0.0.0
+          installed_at: 2026-02-22T23:02:31Z
+          modified: false
+          checksum: sha256:c456a227f95e865045b0e689c5b14bf7b6c5656d0e381428fe5e5a9a70e5d61f
+        - name: mcp-server-starter.add-tool.md
+          version: 0.0.0
+          installed_at: 2026-02-22T23:02:39Z
+          modified: false
+          checksum: sha256:3a989c1acb2fe17a5c9f1900b1c129bbb8a196433d72c8800ea8e8f78aa4135b
+        - name: git.init.md
+          version: 0.0.0
+          installed_at: 2026-02-22T23:02:47Z
+          modified: false
+          checksum: sha256:b7942de5258edcf3cc1786a8ef0a609ceb3da9d362251ace7655e71df65b6b69
+        - name: git.commit.md
+          version: 0.0.0
+          installed_at: 2026-02-22T23:02:55Z
+          modified: false
+          checksum: sha256:70a9f9bf77e0e36bd696d33c14aa6594013d7f55ea1fae1c92a3d0c4072e8ff5
+      designs: []
   acp-core:
     source: https://github.com/prmichaelsen/agent-context-protocol.git
     package_version: 3.10.0
@@ -43,6 +105,5 @@ packages:
       designs:
         - name: design.template.md
         - name: requirements.template.md
-
 manifest_version: 1.0.0
-last_updated: 2026-02-22T22:59:15Z
+last_updated: 2026-02-22T23:01:48Z
