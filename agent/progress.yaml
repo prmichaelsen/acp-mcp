@@ -1,33 +1,98 @@
 project:
   name: acp-mcp
-  version: 0.1.0
+  version: 0.2.0
   started: 2026-02-22
   status: in_progress
+  current_milestone: M1
   description: |
-    Support remote machine development using ACP methodology
+    MCP server for remote machine operations via SSH.
+    Provides core tools for executing commands, reading/writing files,
+    and listing directories on remote development environments.
 
-milestones: []
+milestones:
+  - id: M1
+    name: Core Tools Implementation
+    status: in_progress
+    progress: 25%
+    started: 2026-02-22
+    completed: null
+    estimated_weeks: 1-2
+    tasks_completed: 0
+    tasks_total: 3
+    notes: |
+      SSH infrastructure and first tool (acp_remote_list_files) complete.
+      Three remaining tools to implement: execute_command, read_file, write_file.
 
-tasks: {}
+tasks:
+  milestone_1:
+    - id: task-1
+      name: Implement acp_remote_execute_command Tool
+      status: not_started
+      file: agent/tasks/milestone-1-core-tools-implementation/task-1-implement-acp-remote-execute-command.md
+      estimated_hours: 3-4
+      actual_hours: null
+      completed_date: null
+      priority: high
+      notes: |
+        Most versatile tool - enables git, npm, and any CLI operations.
+        
+    - id: task-2
+      name: Implement acp_remote_read_file Tool
+      status: not_started
+      file: agent/tasks/milestone-1-core-tools-implementation/task-2-implement-acp-remote-read-file.md
+      estimated_hours: 2-3
+      actual_hours: null
+      completed_date: null
+      priority: medium
+      notes: |
+        Essential for viewing remote files and debugging.
+        
+    - id: task-3
+      name: Implement acp_remote_write_file Tool
+      status: not_started
+      file: agent/tasks/milestone-1-core-tools-implementation/task-3-implement-acp-remote-write-file.md
+      estimated_hours: 3-4
+      actual_hours: null
+      completed_date: null
+      priority: medium
+      notes: |
+        Completes CRUD operations for remote file management.
 
 documentation:
-  design_documents: 0
-  milestone_documents: 0
+  design_documents: 1
+  milestone_documents: 1
   pattern_documents: 0
-  task_documents: 0
+  task_documents: 3
 
 progress:
-  planning: 0
-  implementation: 0
-  overall: 0
+  planning: 100%
+  implementation: 25%
+  overall: 40%
 
-recent_work: []
+recent_work:
+  - date: 2026-02-22
+    description: Initial project setup and SSH infrastructure
+    items:
+      - ✅ Created MCP server scaffold with TypeScript and esbuild
+      - ✅ Integrated ssh2 library for SSH connectivity
+      - ✅ Implemented SSHConnectionManager utility class
+      - ✅ Implemented acp_remote_list_files tool (first core tool)
+      - ✅ Added TypeScript declaration file generation
+      - ✅ Created comprehensive design document for all core tools
+      - ✅ Planned milestone and tasks for remaining implementation
+      - 📋 Version 0.2.0 released with SSH support
 
 next_steps:
-  - Define project requirements in agent/design/requirements.md
-  - Plan milestones and tasks with @acp.plan
-  - Start development with @acp.proceed
+  - Implement acp_remote_execute_command tool (Task 1)
+  - Implement acp_remote_read_file tool (Task 2)
+  - Implement acp_remote_write_file tool (Task 3)
+  - Update documentation and version to 0.3.0
+  - Deploy with mcp-auth wrapper for agentbase.me integration
 
-notes: []
+notes:
+  - Project designed for Task 128 (ACP Remote Development Integration)
+  - Will be wrapped by /home/prmichaelsen/mcp-auth for JWT authentication
+  - Consumed by agentbase.me platform for remote development features
+  - SSH credentials provided by mcp-auth wrapper from user configuration
 
 current_blockers: []
