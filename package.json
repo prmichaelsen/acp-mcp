@@ -1,0 +1,51 @@
+{
+  "name": "@prmichaelsen/acp-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for a remote machine MCP server that will be wrapped by /home/prmichaelsen/mcp-auth",
+  "type": "module",
+  "main": "dist/server.js",
+  "exports": {
+    ".": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.js"
+    },
+    "./factory": {
+      "types": "./dist/server-factory.d.ts",
+      "import": "./dist/server-factory.js"
+    }
+  },
+  "bin": {
+    "acp-mcp": "./dist/server.js"
+  },
+  "scripts": {
+    "build": "node esbuild.build.js",
+    "build:watch": "node esbuild.watch.js",
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "test": "jest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.19",
+    "esbuild": "^0.20.0",
+    "tsx": "^4.7.1",
+    "typescript": "^5.3.3",
+    "@types/jest": "^29.5.12",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2"
+  },
+  "keywords": [
+    "mcp",
+    "mcp-server",
+    "acp",
+    "remote",
+    "mcp-auth"
+  ],
+  "author": "Patrick Michaelsen",
+  "license": "MIT"
+}
