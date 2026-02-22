@@ -1,4 +1,5 @@
 import esbuild from 'esbuild';
+import { execSync } from 'child_process';
 
 const sharedConfig = {
   bundle: true,
@@ -25,5 +26,9 @@ await esbuild.build({
   entryPoints: ['src/server-factory.ts'],
   outfile: 'dist/server-factory.js',
 });
+
+// Generate TypeScript declaration files
+console.log('Generating TypeScript declarations...');
+execSync('tsc --emitDeclarationOnly', { stdio: 'inherit' });
 
 console.log('✓ Build complete');
