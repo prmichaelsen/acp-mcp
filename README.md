@@ -41,8 +41,17 @@ Add to your Claude Desktop configuration:
 
 ```typescript
 import { createServer } from '@prmichaelsen/acp-mcp/factory';
+import { readFileSync } from 'fs';
 
-const server = await createServer('user-123');
+const server = await createServer({
+  userId: 'user-123',
+  ssh: {
+    host: 'remote.example.com',
+    port: 22,
+    username: 'remote-user',
+    privateKey: readFileSync('/path/to/private/key', 'utf-8'),
+  },
+});
 ```
 
 ## Available Tools
@@ -53,10 +62,42 @@ const server = await createServer('user-123');
 
 ## Configuration
 
-Copy `.env.example` to `.env` and configure:
+### Standalone Server Configuration
+
+Copy `.env.example` to `.env` and configure SSH credentials:
 
 ```bash
 cp .env.example .env
+```
+
+Edit `.env` with your SSH connection details:
+
+```bash
+# SSH Configuration (required)
+SSH_HOST=your-remote-server.com
+SSH_PORT=22
+SSH_USERNAME=your-username
+SSH_PRIVATE_KEY_PATH=/path/to/your/ssh/private/key
+```
+
+### mcp-auth Configuration
+
+When using with mcp-auth, SSH credentials are provided programmatically:
+
+```typescript
+import { createServer } from '@prmichaelsen/acp-mcp/factory';
+import { readFileSync } from 'fs';
+
+// SSH credentials provided by mcp-auth wrapper
+const server = await createServer({
+  userId: 'user-123',
+  ssh: {
+    host: process.env.REMOTE_HOST,
+    port: parseInt(process.env.REMOTE_PORT || '22'),
+    username: process.env.REMOTE_USERNAME,
+    privateKey: readFileSync(process.env.REMOTE_KEY_PATH, 'utf-8'),
+  },
+});
 ```
 
 ## Scripts

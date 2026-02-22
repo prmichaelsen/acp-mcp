@@ -1,6 +1,6 @@
 {
   "name": "@prmichaelsen/acp-mcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "MCP server for a remote machine MCP server that will be wrapped by /home/prmichaelsen/mcp-auth",
   "type": "module",
   "main": "dist/server.js",
@@ -29,16 +29,18 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "ssh2": "^1.17.0"
   },
   "devDependencies": {
-    "@types/node": "^20.11.19",
-    "esbuild": "^0.20.0",
-    "tsx": "^4.7.1",
-    "typescript": "^5.3.3",
     "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.19",
+    "@types/ssh2": "^1.15.5",
+    "esbuild": "^0.20.0",
     "jest": "^29.7.0",
-    "ts-jest": "^29.1.2"
+    "ts-jest": "^29.1.2",
+    "tsx": "^4.7.1",
+    "typescript": "^5.3.3"
   },
   "keywords": [
     "mcp",

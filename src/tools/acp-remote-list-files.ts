@@ -1,10 +1,9 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
-import { readdir, stat } from 'fs/promises';
-import { join } from 'path';
+import { SSHConnectionManager } from '../utils/ssh-connection.js';
 
 export const acpRemoteListFilesTool: Tool = {
   name: 'acp_remote_list_files',
-  description: 'List files and directories in a specified path on the remote machine',
+  description: 'List files and directories in a specified path on the remote machine via SSH',
   inputSchema: {
     type: 'object',
     properties: {
@@ -29,19 +28,19 @@ interface ListFilesArgs {
 
 /**
  * Handle the acp_remote_list_files tool invocation
- * Lists files and directories at the specified path
+ * Lists files and directories at the specified path on the remote machine via SSH
  * 
  * @param args - Tool arguments containing path and recursive flag
- * @param userId - Optional user ID for user-scoped operations (from mcp-auth)
+ * @param sshConnection - SSH connection manager for remote operations
  */
 export async function handleAcpRemoteListFiles(
   args: any,
-  userId?: string
+  sshConnection: SSHConnectionManager
 ): Promise<{ content: Array<{ type: string; text: string }> }> {
   const { path, recursive = false } = args as ListFilesArgs;
 
   try {
-    const files = await listFiles(path, recursive);
+    const files = await listRemoteFiles(sshConnection, path, recursive);
     
     return {
       content: [
@@ -57,7 +56,7 @@ export async function handleAcpRemoteListFiles(
       content: [
         {
           type: 'text',
-          text: `Error listing files: ${errorMessage}`,
+          text: `Error listing remote files: ${errorMessage}`,
         },
       ],
     };
@@ -65,19 +64,22 @@ export async function handleAcpRemoteListFiles(
 }
 
 /**
- * Recursively list files in a directory
+ * Recursively list files in a remote directory via SSH
  */
-async function listFiles(dirPath: string, recursive: boolean): Promise<string[]> {
-  const entries = await readdir(dirPath, { withFileTypes: true });
+async function listRemoteFiles(
+  ssh: SSHConnectionManager,
+  dirPath: string,
+  recursive: boolean
+): Promise<string[]> {
+  const entries = await ssh.listFiles(dirPath);
   const files: string[] = [];
 
   for (const entry of entries) {
-    const fullPath = join(dirPath, entry.name);
-    
-    if (entry.isDirectory()) {
+    if (entry.isDirectory) {
       files.push(`${entry.name}/`);
       if (recursive) {
-        const subFiles = await listFiles(fullPath, recursive);
+        const fullPath = `${dirPath}/${entry.name}`.replace(/\/+/g, '/');
+        const subFiles = await listRemoteFiles(ssh, fullPath, recursive);
         files.push(...subFiles.map(f => `${entry.name}/${f}`));
       }
     } else {
