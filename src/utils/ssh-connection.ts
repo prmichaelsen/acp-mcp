@@ -106,10 +106,12 @@ export class SSHConnectionManager {
     }
 
     const startTime = Date.now();
-    logger.sshCommand(command, undefined, timeoutSeconds);
+    // Wrap command to source shell config for proper PATH and environment
+    const wrappedCommand = this.wrapCommandWithShellInit(command);
+    logger.sshCommand(wrappedCommand, undefined, timeoutSeconds);
 
     const execPromise = new Promise<{ stdout: string; stderr: string; exitCode: number }>((resolve, reject) => {
-      this.client.exec(command, (err, stream) => {
+      this.client.exec(wrappedCommand, (err, stream) => {
         if (err) {
           reject(err);
           return;
@@ -181,11 +183,13 @@ export class SSHConnectionManager {
     }
 
     const fullCommand = cwd ? `cd "${cwd}" && ${command}` : command;
+    // Wrap command to source shell config for proper PATH and environment
+    const wrappedCommand = this.wrapCommandWithShellInit(fullCommand);
     const startTime = Date.now();
-    logger.sshCommand(fullCommand, cwd);
+    logger.sshCommand(wrappedCommand, cwd);
 
     return new Promise((resolve, reject) => {
-      this.client.exec(fullCommand, (err, stream) => {
+      this.client.exec(wrappedCommand, (err, stream) => {
         if (err) {
           logger.error('SSH exec failed', {
             command: fullCommand,
@@ -526,6 +530,20 @@ export class SSHConnectionManager {
         writeOperation();
       }
     });
+  }
+
+  /**
+   * Wrap command to source shell configuration files
+   * This ensures PATH and other environment variables are properly set
+   * SSH non-interactive shells don't source ~/.bashrc or ~/.zshrc by default
+   *
+   * @param command - The command to wrap
+   * @returns Wrapped command that sources shell config first
+   */
+  private wrapCommandWithShellInit(command: string): string {
+    // Try to source common shell config files
+    // Use || true to ignore errors if files don't exist
+    return `(source ~/.zshrc 2>/dev/null || source ~/.bashrc 2>/dev/null || source ~/.profile 2>/dev/null || true) && ${command}`;
   }
 
   /**

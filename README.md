@@ -69,6 +69,11 @@ const server = await createServer({
   - `cwd` (optional): Working directory for command execution
   - `timeout` (optional): Timeout in seconds (default: 30, ignored if progress streaming)
   - **Returns**: `{ stdout, stderr, exitCode, timedOut, streamed? }`
+  - **Shell Environment** (v0.7.1+): Automatically sources shell configuration files
+    - Sources `~/.zshrc`, `~/.bashrc`, or `~/.profile` before executing commands
+    - Ensures `$PATH` and environment variables are properly loaded
+    - Enables user-installed tools (nvm, homebrew, etc.) to work correctly
+    - Gracefully handles missing config files
   - **Progress Streaming** (v0.7.0+): Supports real-time output streaming when client provides `progressToken`
     - Requires MCP SDK v1.26.0+ (server and client)
     - Client must provide `progressToken` in request `_meta`

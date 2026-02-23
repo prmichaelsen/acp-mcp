@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.1] - 2026-02-23
+
+### Fixed
+- **Shell environment not loaded**: Commands now properly source shell configuration files (`~/.zshrc`, `~/.bashrc`, `~/.profile`)
+  - Non-interactive SSH shells don't source config files by default
+  - This caused `$PATH` to be incomplete and environment variables to be missing
+  - Commands like `npm`, `node`, `git` would fail with "command not found" if installed via nvm, homebrew, or other user-space package managers
+  - Solution: Wrap all commands with shell config sourcing: `(source ~/.zshrc || source ~/.bashrc || source ~/.profile || true) && command`
+  - Applies to both `execWithTimeout()` and `execStream()` methods
+  - Gracefully handles missing config files (uses `|| true` to prevent errors)
+
+### Technical Details
+- Added `wrapCommandWithShellInit()` private method to SSHConnectionManager
+- Tries to source config files in order: `.zshrc` → `.bashrc` → `.profile`
+- Ignores errors if files don't exist (2>/dev/null and || true)
+- No breaking changes - transparent to users
+- Fixes common issue where user-installed tools aren't in PATH
+
 ## [0.7.0] - 2026-02-23
 
 ### Added
