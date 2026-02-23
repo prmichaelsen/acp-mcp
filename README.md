@@ -59,6 +59,8 @@ const server = await createServer({
 - **acp_remote_list_files** - List files and directories in a specified path on the remote machine
   - `path` (required): The directory path to list files from
   - `recursive` (optional): Whether to list files recursively (default: false)
+  - **Returns**: Absolute paths (e.g., `/home/user/project/file.txt`) that can be used directly with other tools
+  - **Note**: As of v0.5.0, returns absolute paths instead of relative filenames for seamless integration with read/write operations
 
 - **acp_remote_execute_command** - Execute a shell command on the remote machine
   - `command` (required): Shell command to execute

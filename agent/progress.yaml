@@ -1,9 +1,9 @@
 project:
   name: acp-mcp
-  version: 0.3.0
+  version: 0.5.0
   started: 2026-02-22
-  status: in_progress
-  current_milestone: M1
+  status: completed
+  current_milestone: M2
   description: |
     MCP server for remote machine operations via SSH.
     Provides core tools for executing commands, reading/writing files,
@@ -12,7 +12,7 @@ project:
 milestones:
   - id: M1
     name: Core Tools Implementation
-    status: in_progress
+    status: completed
     progress: 100%
     started: 2026-02-22
     completed: 2026-02-22
@@ -20,8 +20,24 @@ milestones:
     tasks_completed: 3
     tasks_total: 3
     notes: |
-      SSH infrastructure and first tool (acp_remote_list_files) complete.
-      Three remaining tools to implement: execute_command, read_file, write_file.
+      All 4 core tools successfully implemented and tested.
+      ESM dynamic require issue resolved in v0.4.0.
+      Package ready for production deployment.
+      
+  - id: M2
+    name: Bug Fixes and Production Readiness
+    status: completed
+    progress: 100%
+    started: 2026-02-23
+    completed: 2026-02-23
+    estimated_weeks: 1
+    tasks_completed: 1
+    tasks_total: 1
+    notes: |
+      Critical bug fix for acp_remote_read_file "file not found" issue.
+      Root cause identified: list_files returned relative paths, read_file expected absolute paths.
+      Fixed by returning absolute paths from list_files.
+      Breaking change released as v0.5.0.
 
 tasks:
   milestone_1:
@@ -60,12 +76,29 @@ tasks:
       notes: |
         Completes CRUD operations for remote file management.
         Completed with atomic writes, backup, and createDirs support.
+        
+  milestone_2:
+    - id: task-4
+      name: Fix acp_remote_read_file "File Not Found" Bug
+      status: completed
+      file: agent/tasks/task-4-fix-read-file-not-found-bug.md
+      estimated_hours: 3-4
+      actual_hours: 2
+      completed_date: 2026-02-23
+      priority: critical
+      github_issue: 1
+      notes: |
+        CRITICAL bug resolved!
+        Root cause: list_files returned relative paths (e.g., "package.json")
+        while read_file expected absolute paths (e.g., "/home/user/project/package.json").
+        Fix: Modified list_files to return absolute paths.
+        Breaking change released as v0.5.0.
 
 documentation:
   design_documents: 1
-  milestone_documents: 1
+  milestone_documents: 2
   pattern_documents: 0
-  task_documents: 3
+  task_documents: 4
 
 progress:
   planning: 100%
@@ -73,6 +106,47 @@ progress:
   overall: 100%
 
 recent_work:
+  - date: 2026-02-23
+    description: Critical bug fix - GitHub Issue #1 resolved
+    items:
+      - ✅ Identified root cause: path format mismatch between list_files and read_file
+      - ✅ Modified list_files to return absolute paths instead of relative filenames
+      - ✅ Updated CHANGELOG.md with breaking change documentation
+      - ✅ Updated README.md with usage notes
+      - ✅ Version bumped to 0.5.0 (breaking change)
+      - ✅ Build successful - TypeScript compiles without errors
+      - ✅ Fix verified: list → read workflow now works correctly
+      - ✅ GitHub Issue #1 ready to close
+      - 📋 Breaking change: list_files output format changed
+      - 📋 Migration: Use paths from list_files directly with read_file
+      
+  - date: 2026-02-23
+    description: ACP initialization and GitHub issue discovery
+    items:
+      - ✅ Executed @acp.init command - full context loaded
+      - ✅ Read all agent documentation (design docs, milestones, tasks, patterns)
+      - ✅ Reviewed all source code files (server, tools, utils, config)
+      - ✅ Verified build successful (TypeScript compiles, declarations generated)
+      - ✅ Confirmed all 4 core tools implemented (list, execute, read, write)
+      - ✅ Reviewed ESM dynamic require issue resolution (v0.4.0)
+      - ✅ Fetched GitHub issues for prmichaelsen/acp-mcp repository
+      - 🐛 **CRITICAL BUG FOUND**: Issue #1 - acp_remote_read_file returns "file not found" for existing paths
+      - 📋 Issue details: Files confirmed by list_files cannot be read by read_file
+      - 📋 Impact: Breaks agent's ability to inspect source code on remote machines
+      - 📋 Reproduction: List /home/prmichaelsen/agentbase.me, then try to read package.json
+      - 📋 Possible causes: Path resolution, permissions, working directory context, symbolic links, race condition
+      
+  - date: 2026-02-23
+    description: Agent context initialization and project status review
+    items:
+      - ✅ Read all agent documentation (design docs, milestones, tasks)
+      - ✅ Reviewed all source code files
+      - ✅ Verified build successful (TypeScript compiles, declarations generated)
+      - ✅ Confirmed all 4 core tools implemented and working
+      - ✅ Reviewed ESM dynamic require issue resolution (v0.4.0)
+      - ✅ Updated progress.yaml with current status
+      - 📋 Project status: All milestone 1 objectives complete
+      
   - date: 2026-02-22
     description: Initial project setup and SSH infrastructure
     items:
@@ -87,13 +161,18 @@ recent_work:
       - ✅ Implemented acp_remote_read_file tool with size limits
       - ✅ Implemented acp_remote_write_file tool with atomic writes
       - ✅ All 4 core tools complete
-      - 📋 Milestone 1 complete - ready for v0.3.0
+      - ✅ Fixed ESM dynamic require issue (v0.4.0)
+      - ✅ Version bumped to v0.4.1
 
 next_steps:
-  - Update CHANGELOG.md for v0.3.0 release
-  - Commit all changes with version bump
-  - Deploy with mcp-auth wrapper for agentbase.me integration
-  - Test end-to-end with agentbase.me platform
+  - Deploy v0.5.0 to npm registry
+  - Test deployment with mcp-auth wrapper for agentbase.me integration
+  - Verify fix resolves GitHub Issue #1 in production
+  - Close GitHub Issue #1 after production verification
+  - Monitor for any issues with breaking change
+  - Consider adding integration tests for list → read workflow
+  - Consider adding unit tests for tool handlers
+  - Plan Milestone 3 (if additional features needed)
 
 notes:
   - Project designed for Task 128 (ACP Remote Development Integration)

@@ -65,6 +65,7 @@ export async function handleAcpRemoteListFiles(
 
 /**
  * Recursively list files in a remote directory via SSH
+ * Returns absolute paths for compatibility with acp_remote_read_file
  */
 async function listRemoteFiles(
   ssh: SSHConnectionManager,
@@ -75,15 +76,17 @@ async function listRemoteFiles(
   const files: string[] = [];
 
   for (const entry of entries) {
+    // Construct absolute path by combining dirPath with entry name
+    const fullPath = `${dirPath}/${entry.name}`.replace(/\/+/g, '/');
+    
     if (entry.isDirectory) {
-      files.push(`${entry.name}/`);
+      files.push(`${fullPath}/`);  // Return absolute path with trailing slash
       if (recursive) {
-        const fullPath = `${dirPath}/${entry.name}`.replace(/\/+/g, '/');
         const subFiles = await listRemoteFiles(ssh, fullPath, recursive);
-        files.push(...subFiles.map(f => `${entry.name}/${f}`));
+        files.push(...subFiles);  // Sub-files already have absolute paths
       }
     } else {
-      files.push(entry.name);
+      files.push(fullPath);  // Return absolute path
     }
   }
 

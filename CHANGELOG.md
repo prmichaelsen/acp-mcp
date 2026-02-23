@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-02-23
+
+### Fixed
+- **CRITICAL**: Fixed GitHub Issue #1 - acp_remote_read_file "file not found" bug
+  - Root cause: `acp_remote_list_files` returned relative filenames while `acp_remote_read_file` expected absolute paths
+  - Files listed by `acp_remote_list_files` can now be directly read by `acp_remote_read_file`
+  - Fixes workflow: list directory → read file from list results
+
+### Changed
+- **BREAKING**: `acp_remote_list_files` now returns absolute paths instead of relative filenames
+  - **Before**: `['package.json', 'README.md', 'src/']`
+  - **After**: `['/home/user/project/package.json', '/home/user/project/README.md', '/home/user/project/src/']`
+  - **Migration**: If you were manually constructing paths, you no longer need to - use paths directly from list results
+  - **Benefit**: Paths from `acp_remote_list_files` work directly with `acp_remote_read_file`, `acp_remote_write_file`, and `acp_remote_execute_command`
+
+### Technical Details
+- Modified `listRemoteFiles()` function in `src/tools/acp-remote-list-files.ts`
+- Absolute paths constructed by combining directory path with entry name
+- Recursive listings now return absolute paths for all nested files
+- No changes needed to other tools - they already expected absolute paths
+
+## [0.4.1] - 2026-02-23
+
+### Added
+- Enhanced debug logging throughout SSH operations
+- Structured logging for tool invocations, SSH commands, and file operations
+
+### Changed
+- Improved error messages with more context
+- Better logging of SSH connection state
+
 ## [0.4.0] - 2026-02-23
 
 ### Fixed
