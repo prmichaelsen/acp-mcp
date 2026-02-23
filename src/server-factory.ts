@@ -5,6 +5,9 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { config } from './config.js';
 import { acpRemoteListFilesTool, handleAcpRemoteListFiles } from './tools/acp-remote-list-files.js';
+import { acpRemoteExecuteCommandTool, handleAcpRemoteExecuteCommand } from './tools/acp-remote-execute-command.js';
+import { acpRemoteReadFileTool, handleAcpRemoteReadFile } from './tools/acp-remote-read-file.js';
+import { acpRemoteWriteFileTool, handleAcpRemoteWriteFile } from './tools/acp-remote-write-file.js';
 import { ServerConfig } from './types/ssh-config.js';
 import { SSHConnectionManager } from './utils/ssh-connection.js';
 
@@ -36,13 +39,22 @@ export async function createServer(serverConfig: ServerConfig): Promise<Server> 
 
   // Register tools with SSH connection context
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: [acpRemoteListFilesTool],
+    tools: [acpRemoteListFilesTool, acpRemoteExecuteCommandTool, acpRemoteReadFileTool, acpRemoteWriteFileTool],
   }));
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     if (request.params.name === 'acp_remote_list_files') {
       // Pass SSH connection to handler for remote operations
       return await handleAcpRemoteListFiles(request.params.arguments, sshConnection);
+    }
+    if (request.params.name === 'acp_remote_execute_command') {
+      return await handleAcpRemoteExecuteCommand(request.params.arguments, sshConnection);
+    }
+    if (request.params.name === 'acp_remote_read_file') {
+      return await handleAcpRemoteReadFile(request.params.arguments, sshConnection);
+    }
+    if (request.params.name === 'acp_remote_write_file') {
+      return await handleAcpRemoteWriteFile(request.params.arguments, sshConnection);
     }
     throw new Error(`Unknown tool: ${request.params.name}`);
   });

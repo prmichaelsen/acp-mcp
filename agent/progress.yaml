@@ -1,6 +1,6 @@
 project:
   name: acp-mcp
-  version: 0.2.0
+  version: 0.3.0
   started: 2026-02-22
   status: in_progress
   current_milestone: M1
@@ -13,11 +13,11 @@ milestones:
   - id: M1
     name: Core Tools Implementation
     status: in_progress
-    progress: 25%
+    progress: 100%
     started: 2026-02-22
-    completed: null
+    completed: 2026-02-22
     estimated_weeks: 1-2
-    tasks_completed: 0
+    tasks_completed: 3
     tasks_total: 3
     notes: |
       SSH infrastructure and first tool (acp_remote_list_files) complete.
@@ -27,36 +27,39 @@ tasks:
   milestone_1:
     - id: task-1
       name: Implement acp_remote_execute_command Tool
-      status: not_started
+      status: completed
       file: agent/tasks/milestone-1-core-tools-implementation/task-1-implement-acp-remote-execute-command.md
       estimated_hours: 3-4
       actual_hours: null
-      completed_date: null
+      completed_date: 2026-02-22
       priority: high
       notes: |
         Most versatile tool - enables git, npm, and any CLI operations.
+        Completed with timeout support and proper error handling.
         
     - id: task-2
       name: Implement acp_remote_read_file Tool
-      status: not_started
+      status: completed
       file: agent/tasks/milestone-1-core-tools-implementation/task-2-implement-acp-remote-read-file.md
       estimated_hours: 2-3
       actual_hours: null
-      completed_date: null
+      completed_date: 2026-02-22
       priority: medium
       notes: |
         Essential for viewing remote files and debugging.
+        Completed with file size limits and encoding support.
         
     - id: task-3
       name: Implement acp_remote_write_file Tool
-      status: not_started
+      status: completed
       file: agent/tasks/milestone-1-core-tools-implementation/task-3-implement-acp-remote-write-file.md
       estimated_hours: 3-4
       actual_hours: null
-      completed_date: null
+      completed_date: 2026-02-22
       priority: medium
       notes: |
         Completes CRUD operations for remote file management.
+        Completed with atomic writes, backup, and createDirs support.
 
 documentation:
   design_documents: 1
@@ -66,8 +69,8 @@ documentation:
 
 progress:
   planning: 100%
-  implementation: 25%
-  overall: 40%
+  implementation: 100%
+  overall: 100%
 
 recent_work:
   - date: 2026-02-22
@@ -80,14 +83,17 @@ recent_work:
       - ✅ Added TypeScript declaration file generation
       - ✅ Created comprehensive design document for all core tools
       - ✅ Planned milestone and tasks for remaining implementation
-      - 📋 Version 0.2.0 released with SSH support
+      - ✅ Implemented acp_remote_execute_command tool with timeout support
+      - ✅ Implemented acp_remote_read_file tool with size limits
+      - ✅ Implemented acp_remote_write_file tool with atomic writes
+      - ✅ All 4 core tools complete
+      - 📋 Milestone 1 complete - ready for v0.3.0
 
 next_steps:
-  - Implement acp_remote_execute_command tool (Task 1)
-  - Implement acp_remote_read_file tool (Task 2)
-  - Implement acp_remote_write_file tool (Task 3)
-  - Update documentation and version to 0.3.0
+  - Update CHANGELOG.md for v0.3.0 release
+  - Commit all changes with version bump
   - Deploy with mcp-auth wrapper for agentbase.me integration
+  - Test end-to-end with agentbase.me platform
 
 notes:
   - Project designed for Task 128 (ACP Remote Development Integration)

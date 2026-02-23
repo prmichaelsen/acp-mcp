@@ -1,6 +1,6 @@
 {
   "name": "@prmichaelsen/acp-mcp",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "MCP server for a remote machine MCP server that will be wrapped by /home/prmichaelsen/mcp-auth",
   "type": "module",
   "main": "dist/server.js",

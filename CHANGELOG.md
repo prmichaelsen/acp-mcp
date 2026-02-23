@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-02-22
+
+### Added
+- `acp_remote_execute_command` tool for executing arbitrary shell commands on remote machines
+- `acp_remote_read_file` tool for reading file contents from remote machines
+- `acp_remote_write_file` tool for writing file contents to remote machines
+- Timeout support for command execution (default: 30 seconds)
+- File size limits for read operations (default: 1MB, configurable)
+- Atomic file writes with temp file + rename pattern
+- Optional backup functionality for file writes
+- Optional parent directory creation for file writes
+- Comprehensive error handling for all tools
+
+### Changed
+- All tools now return structured JSON responses for better parsing
+- Enhanced SSHConnectionManager with readFile and writeFile methods
+- Updated README with complete tool documentation
+
+### Technical Details
+- Added `execWithTimeout()` method to SSHConnectionManager
+- Added `readFile()` method with size validation
+- Added `writeFile()` method with atomic writes and backup support
+- All 4 core tools now fully implemented and tested
+- TypeScript compilation successful
+- Build generates proper .d.ts files
+
 ## [0.2.0] - 2026-02-22
 
 ### Added

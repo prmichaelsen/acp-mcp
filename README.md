@@ -60,6 +60,26 @@ const server = await createServer({
   - `path` (required): The directory path to list files from
   - `recursive` (optional): Whether to list files recursively (default: false)
 
+- **acp_remote_execute_command** - Execute a shell command on the remote machine
+  - `command` (required): Shell command to execute
+  - `cwd` (optional): Working directory for command execution
+  - `timeout` (optional): Timeout in seconds (default: 30)
+  - Returns: `{ stdout, stderr, exitCode, timedOut }`
+
+- **acp_remote_read_file** - Read file contents from the remote machine
+  - `path` (required): Absolute path to file
+  - `encoding` (optional): File encoding - utf-8, ascii, or base64 (default: utf-8)
+  - `maxSize` (optional): Max file size in bytes (default: 1MB)
+  - Returns: `{ content, size, encoding }`
+
+- **acp_remote_write_file** - Write file contents to the remote machine
+  - `path` (required): Absolute path to file
+  - `content` (required): File contents to write
+  - `encoding` (optional): File encoding (default: utf-8)
+  - `createDirs` (optional): Create parent directories (default: false)
+  - `backup` (optional): Backup existing file before overwriting (default: false)
+  - Returns: `{ success, bytesWritten, backupPath }`
+
 ## Configuration
 
 ### Standalone Server Configuration
