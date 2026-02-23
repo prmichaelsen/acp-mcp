@@ -6,7 +6,7 @@ const sharedConfig = {
   target: 'node18',
   format: 'esm',
   sourcemap: true,
-  external: ['@modelcontextprotocol/sdk'],
+  external: ['@modelcontextprotocol/sdk', 'ssh2'],
 };
 
 // Watch standalone server

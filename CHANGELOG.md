@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-02-23
+
+### Fixed
+- **CRITICAL**: Fixed ESM dynamic require issue that prevented cloud deployment
+  - Marked `ssh2` as external in esbuild configuration
+  - Package can now be deployed to Google Cloud Run, AWS Lambda, Azure Functions, and other ESM-based environments
+  - Resolved "Dynamic require of 'net' is not supported" error
+  - See [bug report](agent/reports/acp-mcp-esm-dynamic-require-issue.md) for full details
+
+### Changed
+- Updated both `esbuild.build.js` and `esbuild.watch.js` to exclude `ssh2` from bundling
+- Reduced bundle size: `server-factory.js` is now 15KB (previously much larger when ssh2 was bundled)
+
+### Technical Details
+- `ssh2` library is now resolved at runtime from `node_modules` instead of being bundled
+- This allows `ssh2` to use dynamic `require()` calls for Node.js built-in modules without ESM compatibility issues
+- No breaking changes - the API remains identical
+
 ## [0.3.0] - 2026-02-22
 
 ### Added
