@@ -1,5 +1,6 @@
 import { Client, SFTPWrapper } from 'ssh2';
 import { SSHConfig } from '../types/ssh-config.js';
+import { FileEntry, parsePermissions, getFileType } from '../types/file-entry.js';
 import { logger } from './logger.js';
 
 /**
@@ -179,24 +180,141 @@ export class SSHConnectionManager {
   }
 
   /**
-   * List files in a directory using SFTP
+   * List files in a directory with comprehensive metadata
+   * Uses hybrid approach: shell ls for filenames (includes hidden), SFTP stat for metadata
+   *
+   * @param path - Directory path to list
+   * @param includeHidden - Whether to include hidden files (default: true)
+   * @returns Array of FileEntry objects with complete metadata
    */
-  async listFiles(path: string): Promise<Array<{ name: string; isDirectory: boolean }>> {
+  async listFiles(path: string, includeHidden: boolean = true): Promise<FileEntry[]> {
+    const startTime = Date.now();
+    logger.debug('Listing files', { path, includeHidden });
+
+    try {
+      // Step 1: Use shell command to get ALL filenames (including hidden)
+      const lsFlag = includeHidden ? '-A' : '';
+      const command = `ls ${lsFlag} -1 "${path}" 2>/dev/null`;
+      const result = await this.execWithTimeout(command, 10);
+
+      if (result.exitCode !== 0) {
+        throw new Error(`ls command failed: ${result.stderr}`);
+      }
+
+      const filenames = result.stdout
+        .split('\n')
+        .map(f => f.trim())
+        .filter(f => f !== '' && f !== '.' && f !== '..');
+
+      logger.debug('Filenames retrieved via shell', {
+        path,
+        count: filenames.length,
+        method: 'shell',
+      });
+
+      // Step 2: Get rich metadata for each file using SFTP stat()
+      const sftp = await this.getSFTP();
+      const entries: FileEntry[] = [];
+
+      for (const filename of filenames) {
+        const fullPath = `${path}/${filename}`.replace(/\/+/g, '/');
+
+        try {
+          const stats = await new Promise<any>((resolve, reject) => {
+            sftp.stat(fullPath, (err, stats) => {
+              if (err) reject(err);
+              else resolve(stats);
+            });
+          });
+
+          entries.push({
+            name: filename,
+            path: fullPath,
+            type: getFileType(stats),
+            size: stats.size,
+            permissions: parsePermissions(stats.mode),
+            owner: {
+              uid: stats.uid,
+              gid: stats.gid,
+            },
+            timestamps: {
+              accessed: new Date(stats.atime * 1000).toISOString(),
+              modified: new Date(stats.mtime * 1000).toISOString(),
+            },
+          });
+        } catch (error) {
+          // Skip files we can't stat (permissions, race conditions, etc.)
+          logger.warn('Failed to stat file, skipping', {
+            path: fullPath,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
+
+      const duration = Date.now() - startTime;
+      logger.debug('Files listed successfully', {
+        path,
+        count: entries.length,
+        duration: `${duration}ms`,
+        method: 'hybrid',
+      });
+
+      return entries;
+    } catch (error) {
+      // Fallback to SFTP readdir if shell command fails
+      logger.warn('Shell ls command failed, falling back to SFTP readdir', {
+        path,
+        error: error instanceof Error ? error.message : String(error),
+      });
+
+      return this.listFilesViaSFTP(path, includeHidden);
+    }
+  }
+
+  /**
+   * Fallback method: List files using SFTP readdir (may miss hidden files)
+   * @private
+   */
+  private async listFilesViaSFTP(path: string, includeHidden: boolean): Promise<FileEntry[]> {
     const sftp = await this.getSFTP();
 
     return new Promise((resolve, reject) => {
       sftp.readdir(path, (err, list) => {
         if (err) {
+          logger.error('SFTP readdir failed', { path, error: err.message });
           reject(err);
           return;
         }
 
-        const files = list.map((item) => ({
+        let entries = list.map((item) => ({
           name: item.filename,
-          isDirectory: item.attrs.isDirectory(),
+          path: `${path}/${item.filename}`.replace(/\/+/g, '/'),
+          type: getFileType(item.attrs),
+          size: item.attrs.size,
+          permissions: parsePermissions(item.attrs.mode),
+          owner: {
+            uid: item.attrs.uid,
+            gid: item.attrs.gid,
+          },
+          timestamps: {
+            accessed: new Date(item.attrs.atime * 1000).toISOString(),
+            modified: new Date(item.attrs.mtime * 1000).toISOString(),
+          },
         }));
 
-        resolve(files);
+        // SFTP readdir doesn't return hidden files, so filter if requested
+        if (!includeHidden) {
+          entries = entries.filter(e => !e.name.startsWith('.'));
+        }
+
+        logger.debug('Files listed via SFTP fallback', {
+          path,
+          count: entries.length,
+          method: 'sftp',
+          note: 'Hidden files may be missing (SFTP limitation)',
+        });
+
+        resolve(entries);
       });
     });
   }

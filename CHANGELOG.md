@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-02-23
+
+### Added
+- **Comprehensive file metadata** in `acp_remote_list_files` tool
+  - Now returns structured JSON with full file information
+  - Includes permissions (mode, string, owner/group/others breakdown)
+  - Includes timestamps (accessed, modified in ISO 8601 format)
+  - Includes ownership (uid, gid)
+  - Includes file type (file, directory, symlink, other)
+  - Includes file size in bytes
+- **`includeHidden` parameter** for `acp_remote_list_files` (default: true)
+  - Control whether hidden files (starting with `.`) are included
+  - Addresses GitHub Issue #2 - incomplete directory listings
+
+### Fixed
+- **CRITICAL**: Fixed GitHub Issue #2 - `acp_remote_list_files` missing hidden files
+  - Root cause: SFTP `readdir()` filters hidden files by default (protocol behavior)
+  - Solution: Hybrid approach using shell `ls` for filenames + SFTP `stat()` for metadata
+  - Now returns ALL files including hidden directories (`.ssh`, `.config`, `.npm`, etc.)
+  - Fallback to SFTP `readdir()` if shell command unavailable
+
+### Changed
+- **BREAKING**: `acp_remote_list_files` output format changed from simple text to structured JSON
+  - **Before**: Newline-separated list of paths
+  - **After**: JSON array of FileEntry objects with comprehensive metadata
+  - **Migration**: Parse JSON response to access file information
+  - **Benefit**: Rich metadata enables better file system operations and decision-making
+
+### Technical Details
+- Added `FileEntry` interface in `src/types/file-entry.ts`
+- Updated `SSHConnectionManager.listFiles()` with hybrid implementation
+- Added helper functions: `parsePermissions()`, `modeToPermissionString()`, `getFileType()`
+- Enhanced logging for file listing operations
+- Maintains backward compatibility via fallback to SFTP
+
 ## [0.5.0] - 2026-02-23
 
 ### Fixed

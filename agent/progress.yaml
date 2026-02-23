@@ -1,9 +1,9 @@
 project:
   name: acp-mcp
-  version: 0.5.0
+  version: 0.6.0
   started: 2026-02-22
-  status: completed
-  current_milestone: M2
+  status: in_progress
+  current_milestone: M3
   description: |
     MCP server for remote machine operations via SSH.
     Provides core tools for executing commands, reading/writing files,
@@ -38,6 +38,20 @@ milestones:
       Root cause identified: list_files returned relative paths, read_file expected absolute paths.
       Fixed by returning absolute paths from list_files.
       Breaking change released as v0.5.0.
+      
+  - id: M3
+    name: Enhancements and Additional Features
+    status: in_progress
+    progress: 100%
+    started: 2026-02-23
+    completed: 2026-02-23
+    estimated_weeks: 1
+    tasks_completed: 1
+    tasks_total: 1
+    notes: |
+      Fixed critical bug with incomplete directory listings.
+      Implemented comprehensive file metadata in list_files tool.
+      Breaking change released as v0.6.0.
 
 tasks:
   milestone_1:
@@ -96,9 +110,9 @@ tasks:
 
 documentation:
   design_documents: 1
-  milestone_documents: 2
+  milestone_documents: 3
   pattern_documents: 0
-  task_documents: 4
+  task_documents: 5
 
 progress:
   planning: 100%
@@ -106,6 +120,40 @@ progress:
   overall: 100%
 
 recent_work:
+  - date: 2026-02-23
+    description: Fixed incomplete directory listings - GitHub Issue #2
+    items:
+      - ✅ Identified root cause: SFTP readdir() filters hidden files (protocol behavior)
+      - ✅ Created FileEntry interface with comprehensive metadata structure
+      - ✅ Implemented hybrid approach: shell ls + SFTP stat()
+      - ✅ Updated SSHConnectionManager.listFiles() with new implementation
+      - ✅ Added includeHidden parameter (default: true)
+      - ✅ Updated tool schema and output format to JSON
+      - ✅ Updated README.md with new functionality
+      - ✅ Updated CHANGELOG.md with v0.6.0 details
+      - ✅ Version bumped to 0.6.0 (breaking change)
+      - ✅ Build successful - TypeScript compiles without errors
+      - 📋 Breaking change: Output format changed to structured JSON
+      - 📋 Now returns ALL files including hidden directories
+      - 📋 Includes rich metadata: permissions, timestamps, size, ownership
+      - 📋 GitHub Issue #2 ready to close after deployment
+      
+  - date: 2026-02-23
+    description: Agent context initialization via @acp.init command
+    items:
+      - ✅ Executed @acp.init command - comprehensive context loading
+      - ✅ Checked for ACP updates - v3.12.0 available (experimental features system)
+      - ✅ Read all agent documentation (design docs, milestones, tasks, progress)
+      - ✅ Reviewed all source code files (server, tools, utils, config)
+      - ✅ Verified build successful - TypeScript compiles without errors
+      - ✅ Confirmed all 4 core tools implemented and working
+      - ✅ Reviewed project status: Both milestones (M1, M2) completed
+      - ✅ Confirmed GitHub Issue #1 resolved in v0.5.0
+      - ✅ Updated progress.yaml with initialization entry
+      - 📋 Project status: Production-ready, all objectives complete
+      - 📋 Current version: 0.5.1 (includes critical bug fix)
+      - 📋 Next steps: Deploy to npm, test with agentbase.me platform
+      
   - date: 2026-02-23
     description: Critical bug fix - GitHub Issue #1 resolved
     items:
@@ -165,14 +213,15 @@ recent_work:
       - ✅ Version bumped to v0.4.1
 
 next_steps:
-  - Deploy v0.5.0 to npm registry
-  - Test deployment with mcp-auth wrapper for agentbase.me integration
-  - Verify fix resolves GitHub Issue #1 in production
-  - Close GitHub Issue #1 after production verification
-  - Monitor for any issues with breaking change
-  - Consider adding integration tests for list → read workflow
-  - Consider adding unit tests for tool handlers
-  - Plan Milestone 3 (if additional features needed)
+  - Deploy v0.6.0 to npm registry
+  - Test new list_files functionality with hidden files
+  - Verify comprehensive metadata is returned correctly
+  - Test with mcp-auth wrapper for agentbase.me integration
+  - Close GitHub Issue #2 after production verification
+  - Monitor for any issues with breaking change (JSON output format)
+  - Consider adding integration tests for metadata accuracy
+  - Consider adding unit tests for FileEntry parsing
+  - Plan Milestone 4 (if additional features needed)
 
 notes:
   - Project designed for Task 128 (ACP Remote Development Integration)

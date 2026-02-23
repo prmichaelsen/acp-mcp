@@ -1,9 +1,10 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { SSHConnectionManager } from '../utils/ssh-connection.js';
+import { FileEntry } from '../types/file-entry.js';
 
 export const acpRemoteListFilesTool: Tool = {
   name: 'acp_remote_list_files',
-  description: 'List files and directories in a specified path on the remote machine via SSH',
+  description: 'List files and directories in a specified path on the remote machine via SSH. Returns comprehensive metadata including permissions, timestamps, size, and ownership. Includes hidden files by default.',
   inputSchema: {
     type: 'object',
     properties: {
@@ -16,6 +17,11 @@ export const acpRemoteListFilesTool: Tool = {
         description: 'Whether to list files recursively',
         default: false,
       },
+      includeHidden: {
+        type: 'boolean',
+        description: 'Whether to include hidden files (starting with .)',
+        default: true,
+      },
     },
     required: ['path'],
   },
@@ -24,6 +30,7 @@ export const acpRemoteListFilesTool: Tool = {
 interface ListFilesArgs {
   path: string;
   recursive?: boolean;
+  includeHidden?: boolean;
 }
 
 /**
@@ -37,16 +44,19 @@ export async function handleAcpRemoteListFiles(
   args: any,
   sshConnection: SSHConnectionManager
 ): Promise<{ content: Array<{ type: string; text: string }> }> {
-  const { path, recursive = false } = args as ListFilesArgs;
+  const { path, recursive = false, includeHidden = true } = args as ListFilesArgs;
 
   try {
-    const files = await listRemoteFiles(sshConnection, path, recursive);
+    const entries = await listRemoteFiles(sshConnection, path, recursive, includeHidden);
+    
+    // Format as JSON for structured output
+    const output = JSON.stringify(entries, null, 2);
     
     return {
       content: [
         {
           type: 'text',
-          text: files.join('\n'),
+          text: output,
         },
       ],
     };
@@ -65,30 +75,26 @@ export async function handleAcpRemoteListFiles(
 
 /**
  * Recursively list files in a remote directory via SSH
- * Returns absolute paths for compatibility with acp_remote_read_file
+ * Returns FileEntry objects with comprehensive metadata
  */
 async function listRemoteFiles(
   ssh: SSHConnectionManager,
   dirPath: string,
-  recursive: boolean
-): Promise<string[]> {
-  const entries = await ssh.listFiles(dirPath);
-  const files: string[] = [];
+  recursive: boolean,
+  includeHidden: boolean
+): Promise<FileEntry[]> {
+  const entries = await ssh.listFiles(dirPath, includeHidden);
+  const allEntries: FileEntry[] = [...entries];
 
-  for (const entry of entries) {
-    // Construct absolute path by combining dirPath with entry name
-    const fullPath = `${dirPath}/${entry.name}`.replace(/\/+/g, '/');
-    
-    if (entry.isDirectory) {
-      files.push(`${fullPath}/`);  // Return absolute path with trailing slash
-      if (recursive) {
-        const subFiles = await listRemoteFiles(ssh, fullPath, recursive);
-        files.push(...subFiles);  // Sub-files already have absolute paths
+  // Recursively list subdirectories if requested
+  if (recursive) {
+    for (const entry of entries) {
+      if (entry.type === 'directory') {
+        const subEntries = await listRemoteFiles(ssh, entry.path, recursive, includeHidden);
+        allEntries.push(...subEntries);
       }
-    } else {
-      files.push(fullPath);  // Return absolute path
     }
   }
 
-  return files.sort();
+  return allEntries;
 }

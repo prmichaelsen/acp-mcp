@@ -56,11 +56,13 @@ const server = await createServer({
 
 ## Available Tools
 
-- **acp_remote_list_files** - List files and directories in a specified path on the remote machine
+- **acp_remote_list_files** - List files and directories with comprehensive metadata
   - `path` (required): The directory path to list files from
   - `recursive` (optional): Whether to list files recursively (default: false)
-  - **Returns**: Absolute paths (e.g., `/home/user/project/file.txt`) that can be used directly with other tools
-  - **Note**: As of v0.5.0, returns absolute paths instead of relative filenames for seamless integration with read/write operations
+  - `includeHidden` (optional): Whether to include hidden files starting with `.` (default: true)
+  - **Returns**: JSON array of file entries with metadata (permissions, timestamps, size, ownership)
+  - **Metadata includes**: name, path, type, size, permissions (mode, string, owner/group/others), owner (uid, gid), timestamps (accessed, modified)
+  - **Note**: Uses hybrid approach (shell `ls` + SFTP `stat()`) to get all files including hidden ones with rich metadata
 
 - **acp_remote_execute_command** - Execute a shell command on the remote machine
   - `command` (required): Shell command to execute
