@@ -3,7 +3,7 @@ project:
   version: 0.6.0
   started: 2026-02-22
   status: in_progress
-  current_milestone: M3
+  current_milestone: M4
   description: |
     MCP server for remote machine operations via SSH.
     Provides core tools for executing commands, reading/writing files,
@@ -55,12 +55,12 @@ milestones:
       
   - id: M4
     name: Progress Streaming - Server Implementation
-    status: not_started
-    progress: 0%
+    status: in_progress
+    progress: 25%
     started: null
     completed: null
     estimated_weeks: 1
-    tasks_completed: 0
+    tasks_completed: 1
     tasks_total: 4
     notes: |
       Implement real-time progress streaming for long-running commands.
@@ -141,15 +141,16 @@ tasks:
   milestone_4:
     - id: task-6
       name: Add SSH Stream Execution Method
-      status: not_started
+      status: completed
       file: agent/tasks/milestone-4-progress-streaming-server/task-6-add-ssh-stream-execution.md
       estimated_hours: 3-4
-      actual_hours: null
-      completed_date: null
+      actual_hours: 0.5
+      completed_date: 2026-02-23
       priority: high
       notes: |
-        Foundation for progress streaming.
-        Add execStream() method to SSHConnectionManager.
+        Foundation for progress streaming - COMPLETED!
+        Added execStream() method to SSHConnectionManager.
+        Returns streams for real-time output processing.
         
     - id: task-7
       name: Implement Progress Streaming in Execute Command

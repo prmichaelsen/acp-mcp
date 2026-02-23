@@ -161,6 +161,72 @@ export class SSHConnectionManager {
   }
 
   /**
+   * Execute a command on the remote server with streaming output
+   * Returns streams instead of buffered output for real-time progress
+   *
+   * @param command - Shell command to execute
+   * @param cwd - Optional working directory
+   * @returns Object with stdout stream, stderr stream, and exit code promise
+   */
+  async execStream(
+    command: string,
+    cwd?: string
+  ): Promise<{
+    stream: NodeJS.ReadableStream;
+    stderr: NodeJS.ReadableStream;
+    exitCode: Promise<number>;
+  }> {
+    if (!this.connected) {
+      await this.connect();
+    }
+
+    const fullCommand = cwd ? `cd "${cwd}" && ${command}` : command;
+    const startTime = Date.now();
+    logger.sshCommand(fullCommand, cwd);
+
+    return new Promise((resolve, reject) => {
+      this.client.exec(fullCommand, (err, stream) => {
+        if (err) {
+          logger.error('SSH exec failed', {
+            command: fullCommand,
+            error: err.message
+          });
+          reject(err);
+          return;
+        }
+
+        logger.debug('SSH stream started', { command: fullCommand });
+
+        const exitCodePromise = new Promise<number>((resolveExit) => {
+          stream.on('close', (code: number) => {
+            const duration = Date.now() - startTime;
+            logger.debug('SSH stream closed', {
+              command: fullCommand,
+              exitCode: code,
+              duration: `${duration}ms`
+            });
+            resolveExit(code);
+          });
+        });
+
+        // Handle stream errors
+        stream.on('error', (error: Error) => {
+          logger.error('SSH stream error', {
+            command: fullCommand,
+            error: error.message
+          });
+        });
+
+        resolve({
+          stream: stream,
+          stderr: stream.stderr,
+          exitCode: exitCodePromise,
+        });
+      });
+    });
+  }
+
+  /**
    * Get SFTP wrapper for file operations
    */
   async getSFTP(): Promise<SFTPWrapper> {

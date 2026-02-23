@@ -64,11 +64,18 @@ const server = await createServer({
   - **Metadata includes**: name, path, type, size, permissions (mode, string, owner/group/others), owner (uid, gid), timestamps (accessed, modified)
   - **Note**: Uses hybrid approach (shell `ls` + SFTP `stat()`) to get all files including hidden ones with rich metadata
 
-- **acp_remote_execute_command** - Execute a shell command on the remote machine
+- **acp_remote_execute_command** - Execute a shell command on the remote machine with optional progress streaming
   - `command` (required): Shell command to execute
   - `cwd` (optional): Working directory for command execution
-  - `timeout` (optional): Timeout in seconds (default: 30)
-  - Returns: `{ stdout, stderr, exitCode, timedOut }`
+  - `timeout` (optional): Timeout in seconds (default: 30, ignored if progress streaming)
+  - **Returns**: `{ stdout, stderr, exitCode, timedOut, streamed? }`
+  - **Progress Streaming** (v0.7.0+): Supports real-time output streaming when client provides `progressToken`
+    - Requires MCP SDK v1.26.0+ (server and client)
+    - Client must provide `progressToken` in request `_meta`
+    - Client must handle progress notifications via `onprogress` callback
+    - Graceful fallback to timeout mode if no `progressToken` provided
+    - Rate limited to max 10 notifications/second
+    - Ideal for long-running commands: `npm run build`, `npm test`, `npm run dev`
 
 - **acp_remote_read_file** - Read file contents from the remote machine
   - `path` (required): Absolute path to file

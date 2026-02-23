@@ -55,7 +55,7 @@ export async function createServer(serverConfig: ServerConfig): Promise<Server> 
     return { tools };
   });
 
-  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
     const startTime = Date.now();
     logger.toolInvoked(request.params.name, request.params.arguments, serverConfig.userId);
     
@@ -66,7 +66,8 @@ export async function createServer(serverConfig: ServerConfig): Promise<Server> 
         // Pass SSH connection to handler for remote operations
         result = await handleAcpRemoteListFiles(request.params.arguments, sshConnection);
       } else if (request.params.name === 'acp_remote_execute_command') {
-        result = await handleAcpRemoteExecuteCommand(request.params.arguments, sshConnection);
+        // Pass extra and server for progress streaming support
+        result = await handleAcpRemoteExecuteCommand(request.params.arguments, sshConnection, extra, server);
       } else if (request.params.name === 'acp_remote_read_file') {
         result = await handleAcpRemoteReadFile(request.params.arguments, sshConnection);
       } else if (request.params.name === 'acp_remote_write_file') {

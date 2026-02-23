@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-02-23
+
+### Added
+- **Progress Streaming** for `acp_remote_execute_command` tool
+  - Real-time output streaming for long-running commands
+  - Uses MCP SDK's native progress notification system (`notifications/progress`)
+  - Graceful fallback to timeout mode for clients without progress support
+  - Rate limiting prevents notification spam (max 10/second, 100ms interval)
+  - Supports commands like `npm run build`, `npm run dev`, `npm test`
+  - Progress notifications include stdout chunks as messages
+  - Automatically resets request timeout on progress (prevents timeout for long operations)
+- **`execStream()` method** in SSHConnectionManager
+  - Returns stdout stream, stderr stream, and exit code promise
+  - Enables real-time processing of command output
+  - Comprehensive logging for stream lifecycle
+  - Error handling for stream failures
+
+### Changed
+- `acp_remote_execute_command` handler now accepts `extra` parameter with `progressToken`
+- Server request handlers pass `extra` to execute_command handler
+- Tool description updated to mention progress streaming support
+- Timeout parameter ignored when progress streaming is active
+
+### Technical Details
+- Requires MCP SDK v1.26.0+ for progress support
+- Progress token accessed via `extra._meta.progressToken`
+- Progress notifications sent via `server.notification()` method
+- Backward compatible - existing clients unaffected
+- No breaking changes to API
+- Streaming mode indicated by `streamed: true` in response
+
 ## [0.6.0] - 2026-02-23
 
 ### Added
