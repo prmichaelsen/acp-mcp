@@ -12,6 +12,7 @@ import { acpRemoteExecuteCommandTool, handleAcpRemoteExecuteCommand } from './to
 import { acpRemoteReadFileTool, handleAcpRemoteReadFile } from './tools/acp-remote-read-file.js';
 import { acpRemoteWriteFileTool, handleAcpRemoteWriteFile } from './tools/acp-remote-write-file.js';
 import { SSHConnectionManager } from './utils/ssh-connection.js';
+import { logger } from './utils/logger.js';
 
 async function main() {
   // Load SSH private key
@@ -42,29 +43,46 @@ async function main() {
   );
 
   // Register tools
-  server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: [acpRemoteListFilesTool, acpRemoteExecuteCommandTool, acpRemoteReadFileTool, acpRemoteWriteFileTool],
-  }));
+  server.setRequestHandler(ListToolsRequestSchema, async () => {
+    logger.debug('Tool discovery requested');
+    const tools = [acpRemoteListFilesTool, acpRemoteExecuteCommandTool, acpRemoteReadFileTool, acpRemoteWriteFileTool];
+    logger.debug(`Returning ${tools.length} tools`, { tools: tools.map(t => t.name) });
+    return { tools };
+  });
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
-    if (request.params.name === 'acp_remote_list_files') {
-      return await handleAcpRemoteListFiles(request.params.arguments, sshConnection);
+    const startTime = Date.now();
+    logger.toolInvoked(request.params.name, request.params.arguments);
+    
+    try {
+      let result;
+      
+      if (request.params.name === 'acp_remote_list_files') {
+        result = await handleAcpRemoteListFiles(request.params.arguments, sshConnection);
+      } else if (request.params.name === 'acp_remote_execute_command') {
+        result = await handleAcpRemoteExecuteCommand(request.params.arguments, sshConnection);
+      } else if (request.params.name === 'acp_remote_read_file') {
+        result = await handleAcpRemoteReadFile(request.params.arguments, sshConnection);
+      } else if (request.params.name === 'acp_remote_write_file') {
+        result = await handleAcpRemoteWriteFile(request.params.arguments, sshConnection);
+      } else {
+        throw new Error(`Unknown tool: ${request.params.name}`);
+      }
+      
+      const duration = Date.now() - startTime;
+      const resultSize = JSON.stringify(result).length;
+      logger.toolCompleted(request.params.name, duration, resultSize);
+      
+      return result;
+    } catch (error) {
+      logger.toolFailed(request.params.name, error as Error, request.params.arguments);
+      throw error;
     }
-    if (request.params.name === 'acp_remote_execute_command') {
-      return await handleAcpRemoteExecuteCommand(request.params.arguments, sshConnection);
-    }
-    if (request.params.name === 'acp_remote_read_file') {
-      return await handleAcpRemoteReadFile(request.params.arguments, sshConnection);
-    }
-    if (request.params.name === 'acp_remote_write_file') {
-      return await handleAcpRemoteWriteFile(request.params.arguments, sshConnection);
-    }
-    throw new Error(`Unknown tool: ${request.params.name}`);
   });
 
   // Handle shutdown to cleanup SSH connection
   const cleanup = () => {
-    console.error('Shutting down...');
+    logger.info('Shutting down server');
     sshConnection.disconnect();
     process.exit(0);
   };
@@ -75,10 +93,10 @@ async function main() {
   // Start server
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error('ACP MCP Server running on stdio');
+  logger.info('ACP MCP Server running on stdio');
 }
 
 main().catch((error) => {
-  console.error('Server error:', error);
+  logger.error('Server startup failed', { error: error.message, stack: error.stack });
   process.exit(1);
 });

@@ -1,5 +1,6 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { SSHConnectionManager } from '../utils/ssh-connection.js';
+import { logger } from '../utils/logger.js';
 
 export const acpRemoteWriteFileTool: Tool = {
   name: 'acp_remote_write_file',
@@ -62,12 +63,16 @@ export async function handleAcpRemoteWriteFile(
 ): Promise<{ content: Array<{ type: string; text: string }> }> {
   const { path, content, encoding = 'utf-8', createDirs = false, backup = false } = args as WriteFileArgs;
 
+  logger.debug('Writing remote file', { path, contentSize: content.length, encoding, createDirs, backup });
+
   try {
     const result = await sshConnection.writeFile(path, content, {
       encoding,
       createDirs,
       backup,
     });
+    
+    logger.debug('File write successful', { path, bytesWritten: result.bytesWritten, backupPath: result.backupPath });
     
     const output: WriteFileResult = {
       success: result.success,
@@ -85,6 +90,7 @@ export async function handleAcpRemoteWriteFile(
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error('File write error', { path, error: errorMessage });
     return {
       content: [
         {

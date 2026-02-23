@@ -1,5 +1,6 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { SSHConnectionManager } from '../utils/ssh-connection.js';
+import { logger } from '../utils/logger.js';
 
 export const acpRemoteExecuteCommandTool: Tool = {
   name: 'acp_remote_execute_command',
@@ -51,11 +52,20 @@ export async function handleAcpRemoteExecuteCommand(
 ): Promise<{ content: Array<{ type: string; text: string }> }> {
   const { command, cwd, timeout = 30 } = args as ExecuteCommandArgs;
 
+  logger.debug('Executing remote command', { command, cwd, timeout });
+
   try {
     // Build command with working directory if specified
     const fullCommand = cwd ? `cd ${cwd} && ${command}` : command;
     
     const result = await sshConnection.execWithTimeout(fullCommand, timeout);
+    
+    logger.debug('Command execution result', {
+      exitCode: result.exitCode,
+      timedOut: result.timedOut,
+      stdoutLength: result.stdout.length,
+      stderrLength: result.stderr.length,
+    });
     
     // Format output as JSON for structured response
     const output: ExecuteCommandResult = {
@@ -75,6 +85,7 @@ export async function handleAcpRemoteExecuteCommand(
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error('Command execution error', { command, error: errorMessage });
     return {
       content: [
         {

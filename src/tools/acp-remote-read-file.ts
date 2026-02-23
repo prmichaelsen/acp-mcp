@@ -1,5 +1,6 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { SSHConnectionManager } from '../utils/ssh-connection.js';
+import { logger } from '../utils/logger.js';
 
 export const acpRemoteReadFileTool: Tool = {
   name: 'acp_remote_read_file',
@@ -52,8 +53,12 @@ export async function handleAcpRemoteReadFile(
 ): Promise<{ content: Array<{ type: string; text: string }> }> {
   const { path, encoding = 'utf-8', maxSize = 1048576 } = args as ReadFileArgs;
 
+  logger.debug('Reading remote file', { path, encoding, maxSize });
+
   try {
     const result = await sshConnection.readFile(path, encoding, maxSize);
+    
+    logger.debug('File read successful', { path, size: result.size });
     
     const output: ReadFileResult = {
       content: result.content,
@@ -71,6 +76,7 @@ export async function handleAcpRemoteReadFile(
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error('File read error', { path, error: errorMessage });
     return {
       content: [
         {

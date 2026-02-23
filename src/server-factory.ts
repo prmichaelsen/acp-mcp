@@ -10,6 +10,7 @@ import { acpRemoteReadFileTool, handleAcpRemoteReadFile } from './tools/acp-remo
 import { acpRemoteWriteFileTool, handleAcpRemoteWriteFile } from './tools/acp-remote-write-file.js';
 import { ServerConfig } from './types/ssh-config.js';
 import { SSHConnectionManager } from './utils/ssh-connection.js';
+import { logger } from './utils/logger.js';
 
 /**
  * Create an MCP server instance for a specific user with SSH configuration
@@ -19,11 +20,20 @@ import { SSHConnectionManager } from './utils/ssh-connection.js';
  * @returns Configured MCP Server instance
  */
 export async function createServer(serverConfig: ServerConfig): Promise<Server> {
+  logger.info('Creating server instance', { userId: serverConfig.userId });
+  logger.debug('SSH configuration', {
+    host: serverConfig.ssh.host,
+    port: serverConfig.ssh.port,
+    username: serverConfig.ssh.username,
+  });
+  
   // Create SSH connection manager
   const sshConnection = new SSHConnectionManager(serverConfig.ssh);
   
   // Connect to remote server
   await sshConnection.connect();
+  
+  logger.info('Server created successfully', { userId: serverConfig.userId });
 
   const server = new Server(
     {
@@ -38,34 +48,53 @@ export async function createServer(serverConfig: ServerConfig): Promise<Server> 
   );
 
   // Register tools with SSH connection context
-  server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: [acpRemoteListFilesTool, acpRemoteExecuteCommandTool, acpRemoteReadFileTool, acpRemoteWriteFileTool],
-  }));
+  server.setRequestHandler(ListToolsRequestSchema, async () => {
+    logger.debug('Tool discovery requested', { userId: serverConfig.userId });
+    const tools = [acpRemoteListFilesTool, acpRemoteExecuteCommandTool, acpRemoteReadFileTool, acpRemoteWriteFileTool];
+    logger.debug(`Returning ${tools.length} tools`, { tools: tools.map(t => t.name), userId: serverConfig.userId });
+    return { tools };
+  });
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
-    if (request.params.name === 'acp_remote_list_files') {
-      // Pass SSH connection to handler for remote operations
-      return await handleAcpRemoteListFiles(request.params.arguments, sshConnection);
+    const startTime = Date.now();
+    logger.toolInvoked(request.params.name, request.params.arguments, serverConfig.userId);
+    
+    try {
+      let result;
+      
+      if (request.params.name === 'acp_remote_list_files') {
+        // Pass SSH connection to handler for remote operations
+        result = await handleAcpRemoteListFiles(request.params.arguments, sshConnection);
+      } else if (request.params.name === 'acp_remote_execute_command') {
+        result = await handleAcpRemoteExecuteCommand(request.params.arguments, sshConnection);
+      } else if (request.params.name === 'acp_remote_read_file') {
+        result = await handleAcpRemoteReadFile(request.params.arguments, sshConnection);
+      } else if (request.params.name === 'acp_remote_write_file') {
+        result = await handleAcpRemoteWriteFile(request.params.arguments, sshConnection);
+      } else {
+        throw new Error(`Unknown tool: ${request.params.name}`);
+      }
+      
+      const duration = Date.now() - startTime;
+      const resultSize = JSON.stringify(result).length;
+      logger.toolCompleted(request.params.name, duration, resultSize);
+      
+      return result;
+    } catch (error) {
+      logger.toolFailed(request.params.name, error as Error, request.params.arguments);
+      throw error;
     }
-    if (request.params.name === 'acp_remote_execute_command') {
-      return await handleAcpRemoteExecuteCommand(request.params.arguments, sshConnection);
-    }
-    if (request.params.name === 'acp_remote_read_file') {
-      return await handleAcpRemoteReadFile(request.params.arguments, sshConnection);
-    }
-    if (request.params.name === 'acp_remote_write_file') {
-      return await handleAcpRemoteWriteFile(request.params.arguments, sshConnection);
-    }
-    throw new Error(`Unknown tool: ${request.params.name}`);
   });
 
   // Handle server shutdown to cleanup SSH connection
   process.on('SIGINT', () => {
+    logger.info('Received SIGINT, shutting down', { userId: serverConfig.userId });
     sshConnection.disconnect();
     process.exit(0);
   });
 
   process.on('SIGTERM', () => {
+    logger.info('Received SIGTERM, shutting down', { userId: serverConfig.userId });
     sshConnection.disconnect();
     process.exit(0);
   });
