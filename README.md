@@ -1,16 +1,17 @@
 # ACP MCP
 
-MCP server for a remote machine MCP server that will be wrapped by /home/prmichaelsen/mcp-auth.
+MCP server for remote machine operations via SSH. Provides a single, powerful tool for executing any shell command on remote machines with real-time progress streaming.
 
 ## Installation
 
 ```bash
-npm install
+npm install @prmichaelsen/acp-mcp
 ```
 
 ## Development
 
 ```bash
+npm install
 npm run dev
 ```
 
@@ -56,45 +57,124 @@ const server = await createServer({
 
 ## Available Tools
 
-- **acp_remote_list_files** - List files and directories with comprehensive metadata
-  - `path` (required): The directory path to list files from
-  - `recursive` (optional): Whether to list files recursively (default: false)
-  - `includeHidden` (optional): Whether to include hidden files starting with `.` (default: true)
-  - **Returns**: JSON array of file entries with metadata (permissions, timestamps, size, ownership)
-  - **Metadata includes**: name, path, type, size, permissions (mode, string, owner/group/others), owner (uid, gid), timestamps (accessed, modified)
-  - **Note**: Uses hybrid approach (shell `ls` + SFTP `stat()`) to get all files including hidden ones with rich metadata
+**acp-mcp v1.0.0** provides a single, powerful tool for all remote operations:
 
-- **acp_remote_execute_command** - Execute a shell command on the remote machine with optional progress streaming
-  - `command` (required): Shell command to execute
-  - `cwd` (optional): Working directory for command execution
-  - `timeout` (optional): Timeout in seconds (default: 30, ignored if progress streaming)
-  - **Returns**: `{ stdout, stderr, exitCode, timedOut, streamed? }`
-  - **Shell Environment** (v0.7.1+): Automatically sources shell configuration files
-    - Sources `~/.zshrc`, `~/.bashrc`, or `~/.profile` before executing commands
-    - Ensures `$PATH` and environment variables are properly loaded
-    - Enables user-installed tools (nvm, homebrew, etc.) to work correctly
-    - Gracefully handles missing config files
-  - **Progress Streaming** (v0.7.0+): Supports real-time output streaming when client provides `progressToken`
-    - Requires MCP SDK v1.26.0+ (server and client)
-    - Client must provide `progressToken` in request `_meta`
-    - Client must handle progress notifications via `onprogress` callback
-    - Graceful fallback to timeout mode if no `progressToken` provided
-    - Rate limited to max 10 notifications/second
-    - Ideal for long-running commands: `npm run build`, `npm test`, `npm run dev`
+### acp_remote_execute_command
 
-- **acp_remote_read_file** - Read file contents from the remote machine
-  - `path` (required): Absolute path to file
-  - `encoding` (optional): File encoding - utf-8, ascii, or base64 (default: utf-8)
-  - `maxSize` (optional): Max file size in bytes (default: 1MB)
-  - Returns: `{ content, size, encoding }`
+Execute any shell command on the remote machine with optional progress streaming.
 
-- **acp_remote_write_file** - Write file contents to the remote machine
-  - `path` (required): Absolute path to file
-  - `content` (required): File contents to write
-  - `encoding` (optional): File encoding (default: utf-8)
-  - `createDirs` (optional): Create parent directories (default: false)
-  - `backup` (optional): Backup existing file before overwriting (default: false)
-  - Returns: `{ success, bytesWritten, backupPath }`
+**Parameters**:
+- `command` (required): Shell command to execute
+- `cwd` (optional): Working directory for command execution
+- `timeout` (optional): Timeout in seconds (default: 30, ignored if progress streaming)
+
+**Returns**: `{ stdout, stderr, exitCode, timedOut, streamed? }`
+
+**Features**:
+
+1. **Shell Environment** (v0.7.1+): Automatically sources shell configuration files
+   - Sources `~/.zshrc`, `~/.bashrc`, or `~/.profile` before executing commands
+   - Ensures `$PATH` and environment variables are properly loaded
+   - Enables user-installed tools (nvm, homebrew, etc.) to work correctly
+   - Gracefully handles missing config files
+
+2. **Progress Streaming** (v0.7.0+): Real-time output for long-running commands
+   - Requires MCP SDK v1.26.0+ (server and client)
+   - Client must provide `progressToken` in request `_meta`
+   - Client must handle progress notifications via `onprogress` callback
+   - Graceful fallback to timeout mode if no `progressToken` provided
+   - Rate limited to max 10 notifications/second
+   - Ideal for: `npm run build`, `npm test`, `npm run dev`
+
+## Common Operations
+
+### List Files
+```bash
+# Basic listing
+acp_remote_execute_command({ command: "ls -la ~/project" })
+
+# Recursive listing
+acp_remote_execute_command({ command: "find ~/project -type f" })
+
+# With tree (if installed)
+acp_remote_execute_command({ command: "tree ~/project" })
+
+# Only directories
+acp_remote_execute_command({ command: "ls -d */ ~/project" })
+```
+
+### Read Files
+```bash
+# Read entire file
+acp_remote_execute_command({ command: "cat ~/project/package.json" })
+
+# Read first 100 lines
+acp_remote_execute_command({ command: "head -n 100 ~/project/large-file.txt" })
+
+# Read last 50 lines
+acp_remote_execute_command({ command: "tail -n 50 ~/project/log.txt" })
+
+# Search in file
+acp_remote_execute_command({ command: "grep 'pattern' ~/project/file.txt" })
+```
+
+### Write Files
+```bash
+# Write simple content
+acp_remote_execute_command({ command: "echo 'hello world' > ~/project/file.txt" })
+
+# Write multi-line content
+acp_remote_execute_command({ 
+  command: "cat > ~/project/file.txt << 'EOF'\nline 1\nline 2\nline 3\nEOF" 
+})
+
+# Append to file
+acp_remote_execute_command({ command: "echo 'new line' >> ~/project/file.txt" })
+
+# Create directories
+acp_remote_execute_command({ command: "mkdir -p ~/project/new/nested/dir" })
+```
+
+### File Operations
+```bash
+# Copy files
+acp_remote_execute_command({ command: "cp ~/source.txt ~/dest.txt" })
+
+# Move files
+acp_remote_execute_command({ command: "mv ~/old.txt ~/new.txt" })
+
+# Delete files
+acp_remote_execute_command({ command: "rm ~/file.txt" })
+
+# Change permissions
+acp_remote_execute_command({ command: "chmod 755 ~/script.sh" })
+```
+
+### Development Operations
+```bash
+# Git operations
+acp_remote_execute_command({ command: "git status", cwd: "~/project" })
+acp_remote_execute_command({ command: "git commit -m 'message'", cwd: "~/project" })
+
+# Package management
+acp_remote_execute_command({ command: "npm install", cwd: "~/project" })
+acp_remote_execute_command({ command: "npm run build", cwd: "~/project" })
+
+# Process management
+acp_remote_execute_command({ command: "ps aux | grep node" })
+acp_remote_execute_command({ command: "kill -9 12345" })
+```
+
+## Why Single Tool?
+
+**v1.0.0 removed specialized tools** (`list_files`, `read_file`, `write_file`) in favor of `execute_command`:
+
+✅ **Properly expands `~` and environment variables** - SFTP-based tools didn't
+✅ **Maximum flexibility** - Use any shell command or tool
+✅ **Simpler codebase** - One tool instead of four
+✅ **More reliable** - No SFTP edge cases or limitations
+✅ **Consistent behavior** - Works exactly like interactive SSH
+✅ **Easier to maintain** - Single code path to test and debug
 
 ## Configuration
 

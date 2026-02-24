@@ -1,14 +1,14 @@
 project:
   name: acp-mcp
-  version: 0.7.1
+  version: 1.0.0
   started: 2026-02-22
   status: in_progress
   current_milestone: M4
   description: |
     MCP server for remote machine operations via SSH.
-    Provides core tools for executing commands, reading/writing files,
-    and listing directories on remote development environments.
+    Provides single powerful tool (execute_command) for all remote operations.
     Supports real-time progress streaming for long-running commands.
+    Shell-based approach is more reliable than SFTP for all operations.
 
 milestones:
   - id: M1
@@ -209,6 +209,29 @@ progress:
   overall: 80%
 
 recent_work:
+  - date: 2026-02-24
+    description: Removed ALL specialized tools - v1.0.0 single-tool approach
+    items:
+      - 🔥 **BREAKING CHANGE**: Removed all SFTP-based tools (list_files, read_file, write_file)
+      - ✅ Root cause: All SFTP tools don't expand ~ or environment variables
+      - ✅ SFTP implementation was unreliable, complex, and had multiple edge cases
+      - ✅ Single execute_command tool is more reliable and flexible for ALL operations
+      - ✅ Removed src/tools/acp-remote-list-files.ts
+      - ✅ Removed src/tools/acp-remote-read-file.ts
+      - ✅ Removed src/tools/acp-remote-write-file.ts
+      - ✅ Removed src/types/file-entry.ts
+      - ✅ Removed ALL SFTP methods from SSHConnectionManager (getSFTP, readFile, writeFile, listFiles)
+      - ✅ Removed SFTPWrapper import from ssh2
+      - ✅ Updated server.ts and server-factory.ts (single tool registration)
+      - ✅ Updated CHANGELOG.md with v1.0.0 breaking change and migration guide
+      - ✅ Updated README.md with comprehensive usage examples
+      - ✅ Version bumped to 1.0.0 (major breaking change)
+      - ✅ Build successful - TypeScript compiles without errors
+      - 📋 Now provides ONLY 1 tool: execute_command
+      - 📋 Use shell commands for all operations (ls, cat, echo, etc.)
+      - 📋 Much simpler, more reliable, and easier to maintain
+      - 📋 Migration guide provided in CHANGELOG.md
+      
   - date: 2026-02-23
     description: Fixed shell environment not loading - v0.7.1 patch
     items:
@@ -337,10 +360,11 @@ recent_work:
       - ✅ Version bumped to v0.4.1
 
 next_steps:
-  - Deploy v0.7.1 to npm registry (includes shell environment fix)
+  - Deploy v1.0.0 to npm registry (breaking change - removed list_files tool)
+  - Update mcp-auth wrapper to use v1.0.0
+  - Update agentbase.me to use execute_command for file listing
   - Test shell environment fix with user-installed tools (npm, node, git)
   - Test progress streaming with real clients (Claude Desktop, mcp-auth)
-  - Close GitHub Issue #2 after production verification
   - Start M5: Progress Streaming - Wrapper Integration (mcp-auth)
   - Start M6: Progress Streaming - Client Integration (agentbase.me)
   - Consider ACP update to v3.12.0 (experimental features system)

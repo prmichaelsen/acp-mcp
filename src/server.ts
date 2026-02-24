@@ -7,10 +7,7 @@ import {
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import { config, loadSSHPrivateKey } from './config.js';
-import { acpRemoteListFilesTool, handleAcpRemoteListFiles } from './tools/acp-remote-list-files.js';
 import { acpRemoteExecuteCommandTool, handleAcpRemoteExecuteCommand } from './tools/acp-remote-execute-command.js';
-import { acpRemoteReadFileTool, handleAcpRemoteReadFile } from './tools/acp-remote-read-file.js';
-import { acpRemoteWriteFileTool, handleAcpRemoteWriteFile } from './tools/acp-remote-write-file.js';
 import { SSHConnectionManager } from './utils/ssh-connection.js';
 import { logger } from './utils/logger.js';
 
@@ -45,7 +42,7 @@ async function main() {
   // Register tools
   server.setRequestHandler(ListToolsRequestSchema, async () => {
     logger.debug('Tool discovery requested');
-    const tools = [acpRemoteListFilesTool, acpRemoteExecuteCommandTool, acpRemoteReadFileTool, acpRemoteWriteFileTool];
+    const tools = [acpRemoteExecuteCommandTool];
     logger.debug(`Returning ${tools.length} tools`, { tools: tools.map(t => t.name) });
     return { tools };
   });
@@ -57,15 +54,9 @@ async function main() {
     try {
       let result;
       
-      if (request.params.name === 'acp_remote_list_files') {
-        result = await handleAcpRemoteListFiles(request.params.arguments, sshConnection);
-      } else if (request.params.name === 'acp_remote_execute_command') {
+      if (request.params.name === 'acp_remote_execute_command') {
         // Pass extra and server for progress streaming support
         result = await handleAcpRemoteExecuteCommand(request.params.arguments, sshConnection, extra, server);
-      } else if (request.params.name === 'acp_remote_read_file') {
-        result = await handleAcpRemoteReadFile(request.params.arguments, sshConnection);
-      } else if (request.params.name === 'acp_remote_write_file') {
-        result = await handleAcpRemoteWriteFile(request.params.arguments, sshConnection);
       } else {
         throw new Error(`Unknown tool: ${request.params.name}`);
       }

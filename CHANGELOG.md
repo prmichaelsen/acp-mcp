@@ -5,6 +5,63 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2026-02-24
+
+### Removed
+- **BREAKING**: Removed `acp_remote_list_files`, `acp_remote_read_file`, and `acp_remote_write_file` tools
+  - All SFTP-based tools had fundamental issues with path expansion (didn't expand `~`)
+  - SFTP implementation was unreliable, complex, and had multiple edge cases
+  - `acp_remote_execute_command` with shell commands is more reliable and flexible
+  - Single tool approach is simpler and more maintainable
+
+### Migration Guide
+
+**Before (v0.x)**:
+```typescript
+// List files
+acp_remote_list_files({ path: "~/project", recursive: false })
+
+// Read file
+acp_remote_read_file({ path: "~/project/package.json" })
+
+// Write file
+acp_remote_write_file({ path: "~/project/file.txt", content: "hello" })
+```
+
+**After (v1.0.0)**:
+```typescript
+// List files - use ls, find, or tree
+acp_remote_execute_command({ command: "ls -la ~/project" })
+acp_remote_execute_command({ command: "find ~/project -type f" })
+acp_remote_execute_command({ command: "tree ~/project" })
+
+// Read file - use cat
+acp_remote_execute_command({ command: "cat ~/project/package.json" })
+
+// Write file - use echo or tee
+acp_remote_execute_command({ command: "echo 'hello' > ~/project/file.txt" })
+// Or for multi-line:
+acp_remote_execute_command({ command: "cat > ~/project/file.txt << 'EOF'\nhello\nworld\nEOF" })
+```
+
+**Benefits of single-tool approach**:
+- ✅ Properly expands `~` and all environment variables
+- ✅ More flexible (use any shell commands and flags)
+- ✅ Can use any installed tools (cat, echo, sed, awk, etc.)
+- ✅ Much simpler codebase (only one tool to maintain)
+- ✅ More reliable (uses shell directly, no SFTP edge cases)
+- ✅ Consistent behavior with interactive SSH sessions
+
+### Technical Details
+- Removed `src/tools/acp-remote-list-files.ts`
+- Removed `src/tools/acp-remote-read-file.ts`
+- Removed `src/tools/acp-remote-write-file.ts`
+- Removed `src/types/file-entry.ts`
+- Removed all SFTP methods from SSHConnectionManager (getSFTP, readFile, writeFile, listFiles)
+- Removed SFTPWrapper import from ssh2
+- Now provides only 1 core tool: execute_command
+- Dramatically simplified codebase and reduced maintenance burden
+
 ## [0.7.1] - 2026-02-23
 
 ### Fixed
